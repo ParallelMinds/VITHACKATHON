@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+opencv-python
+pillow
+torch
+torchvision
+ultralytics
+scikit-learn
+torchmetrics
+python-multipart
+python-dotenv
+pydantic
+bcrypt
+python-jose[cryptography]
+email-validator
