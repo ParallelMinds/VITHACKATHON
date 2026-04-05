@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIIBS | Customs Intelligence Command Deck</title>
+    <meta name="description" content="AI Command Deck for Cargo X-ray Risk Screening, module orchestration, and evaluator-ready operational workflows.">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo-wrap">
+                <div class="logo-icon">CI</div>
+                <div>
+                    <div class="logo-text">CIIBS Command Deck</div>
+                    <div class="logo-sub">Customs Intelligence Integrated Border Screening</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span id="statusText">System Online</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="workflow-lane">
+        <div class="workflow-step active" id="wfAcquire">
+            <span class="wf-id">01</span>
+            <div>
+                <h4>Capture & Context</h4>
+                <p>Upload/live frame + optional cargo declaration input.</p>
+            </div>
+        </div>
+        <div class="workflow-step" id="wfAnalyze">
+            <span class="wf-id">02</span>
+            <div>
+                <h4>Detect & Localize</h4>
+                <p>Realtime: fast primary model; Accuracy: merged dual-model detection.</p>
+            </div>
+        </div>
+        <div class="workflow-step" id="wfReconcile">
+            <span class="wf-id">03</span>
+            <div>
+                <h4>Fuse Risk Signals</h4>
+                <p>Anomaly, mismatch, material, concealment, and detection-count fusion.</p>
+            </div>
+        </div>
+        <div class="workflow-step" id="wfEscalate">
+            <span class="wf-id">04</span>
+            <div>
+                <h4>Decision & Action</h4>
+                <p>Produce risk level, explanation, and screening action recommendation.</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="card">
+                <div class="card-title">Scan Mode</div>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-mode="realtime" onclick="setMode('realtime')">Realtime</button>
+                    <button class="toggle-btn" data-mode="accuracy" onclick="setMode('accuracy')">Accuracy</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Input Source</div>
+                <div class="input-tabs">
+                    <button class="input-tab active" data-source="upload" onclick="setSource('upload')">Upload</button>
+                    <button class="input-tab" data-source="webcam" onclick="setSource('webcam')">Live Camera</button>
+                </div>
+
+                <div id="uploadSection">
+                    <div class="upload-zone" id="uploadZone">
+                        <div class="upload-icon">+</div>
+                        <p>Drop X-ray image here</p>
+                        <p class="upload-hint">PNG, JPG up to 20MB</p>
+                        <input type="file" id="fileInput" accept="image/*">
+                    </div>
+                    <img id="uploadPreview" class="upload-preview hidden" alt="Scan preview">
+                </div>
+
+                <div id="webcamSection" class="hidden">
+                    <div class="webcam-container">
+                        <video id="webcamVideo" autoplay muted playsinline></video>
+                        <canvas id="webcamCanvas" class="hidden"></canvas>
+                    </div>
+                    <button class="toggle-btn full-btn" id="btnStartCam" onclick="toggleWebcam()">Start Live Feed</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Declaration Input</div>
+                <textarea class="input-field" id="declaredCargo" placeholder="Example: clothing, food samples, machine parts"></textarea>
+                <p class="micro-note">Use the exact declared cargo text for better mismatch detection.</p>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Explain Mode</div>
+                <div class="switch-row">
+                    <span class="switch-label">Enable Explain Image Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="llmToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn-analyze" id="btnAnalyze" onclick="analyzeImage()">
+                <span class="spinner"></span>
+                <span class="btn-text">Run Screening</span>
+            </button>
+
+            <div class="card" id="perfCard" style="display:none;">
+                <div class="card-title">Performance</div>
+                <div class="perf-row"><span class="perf-label">Inference</span><span class="perf-value" id="perfInference">-</span></div>
+                <div class="perf-row"><span class="perf-label">Total</span><span class="perf-value" id="perfTotal">-</span></div>
+                <div class="perf-row"><span class="perf-label">FPS</span><span class="perf-value" id="perfFPS">-</span></div>
+                <div class="perf-row"><span class="perf-label">Explain</span><span class="perf-value" id="perfLLM">-</span></div>
+                <div class="perf-row"><span class="perf-label">Vision</span><span class="perf-value" id="perfVLM">-</span></div>
+            </div>
+        </aside>
+
+        <main class="results-area">
+            <div class="page-tabs">
+                <button class="page-tab active" onclick="setPage('pageConsole', this)">Screening Console</button>
+                <button class="page-tab" onclick="setPage('pageModules', this)">Module Center</button>
+            </div>
+
+            <section id="pageConsole" class="page-view">
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">SCAN</div>
+                    <h3>Ready for Live Screening</h3>
+                    <p>Run a scan to execute the full pipeline: capture, detect, fuse signals, and decide action.</p>
+                </div>
+
+                <div id="resultsContent" class="hidden">
+                    <div class="card risk-banner animate-in">
+                        <div class="risk-metric">
+                            <div class="metric-value risk-score-value" id="riskScoreVal">0</div>
+                            <div class="metric-label">Risk Score</div>
+                        </div>
+                        <div class="risk-divider"></div>
+                        <div class="risk-metric">
+                            <div class="metric-value"><span class="risk-level-badge" id="riskLevelBadge">-</span></div>
+                            <div class="metric-label">Risk Level</div>
+                        </div>
+                        <div class="risk-divider"></div>
+                        <div class="risk-metric">
+                            <div class="metric-value accent-cyan" id="anomalyVal">0%</div>
+                            <div class="metric-label">Anomaly</div>
+                        </div>
+                        <div class="risk-divider"></div>
+                        <div class="risk-metric">
+                            <div class="metric-value accent-pink" id="concealVal">0%</div>
+                            <div class="metric-label">Concealment</div>
+                        </div>
+                        <div class="risk-divider"></div>
+                        <div class="risk-metric">
+                            <div class="metric-value accent-gold" id="detCountVal">0</div>
+                            <div class="metric-label">Detections</div>
+                        </div>
+                    </div>
+
+                    <div class="card animate-in">
+                        <div class="card-title">6 Signal Risk Fusion</div>
+                        <div class="risk-gauge-container">
+                            <div class="risk-gauge">
+                                <div class="risk-gauge-fill" id="riskGaugeFill"></div>
+                            </div>
+                            <div class="risk-gauge-labels">
+                                <span>Clear</span><span>Low</span><span>Medium</span><span>High</span><span>Critical</span>
+                            </div>
+                        </div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Detection</span>
+                                <div class="breakdown-bar"><div class="breakdown-fill" id="bdDet"></div></div>
+                                <span class="breakdown-value" id="bdDetVal">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Anomaly</span>
+                                <div class="breakdown-bar"><div class="breakdown-fill" id="bdAnom"></div></div>
+                                <span class="breakdown-value" id="bdAnomVal">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Mismatch</span>
+                                <div class="breakdown-bar"><div class="breakdown-fill" id="bdMis"></div></div>
+                                <span class="breakdown-value" id="bdMisVal">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Material</span>
+                                <div class="breakdown-bar"><div class="breakdown-fill" id="bdMat"></div></div>
+                                <span class="breakdown-value" id="bdMatVal">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">Concealment</span>
+                                <div class="breakdown-bar"><div class="breakdown-fill" id="bdCon"></div></div>
+                                <span class="breakdown-value" id="bdConVal">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">VLM Cross-Val</span>
+                                <div class="breakdown-bar"><div class="breakdown-fill" id="bdVLM"></div></div>
+                                <span class="breakdown-value" id="bdVLMVal">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="image-grid animate-in">
+                        <div class="image-panel" id="panelOriginal">
+                            <span class="panel-label">Original Scan</span>
+                            <div class="image-placeholder"><span class="placeholder-icon">IMG</span><p>No image</p></div>
+                        </div>
+                        <div class="image-panel" id="panelDetections">
+                            <span class="panel-label">Detections + Material</span>
+                            <div class="image-placeholder"><span class="placeholder-icon">DET</span><p>No detections</p></div>
+                        </div>
+                        <div class="image-panel" id="panelHeatmap">
+                            <span class="panel-label">Anomaly Heatmap</span>
+                            <div class="image-placeholder"><span class="placeholder-icon">MAP</span><p>No heatmap</p></div>
+                        </div>
+                    </div>
+
+                    <div class="triple-grid animate-in">
+                        <div class="card">
+                            <div class="card-title">Detected Items</div>
+                            <div class="detection-list" id="detectionList">
+                                <p class="muted-line">No items detected.</p>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">AI Assessment</div>
+                            <div class="explanation-text" id="explanationText">Awaiting analysis...</div>
+                            <div class="explanation-source" id="explanationSource"></div>
+                        </div>
+                        <div class="card dual-card" id="vlmCard">
+                            <div class="card-title">Vision Analysis (Image Rule Engine)</div>
+                            <div class="explanation-text" id="vlmText">Enable Explain Image Mode for rule-based image reasoning.</div>
+                            <div class="explanation-source" id="vlmSource"></div>
+                        </div>
+                    </div>
+
+                    <div class="triple-grid animate-in">
+                        <div class="card">
+                            <div class="card-title">Concealment Analysis</div>
+                            <div id="concealmentDetails" class="panel-text">Awaiting analysis...</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Material Composition</div>
+                            <div id="materialDetails" class="panel-text">Awaiting analysis...</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Documentation NLP</div>
+                            <div id="docNlpDetails" class="panel-text">Awaiting declaration analysis...</div>
+                        </div>
+                    </div>
+
+                    <div class="card animate-in">
+                        <div class="card-title">Scan History</div>
+                        <div id="scanHistory" class="scan-history">
+                            <p class="muted-line">No scans yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pageModules" class="page-view hidden">
+                <div class="card integration-card">
+                    <div class="card-title">Implemented Runtime Flow</div>
+                    <div class="integration-flow">
+                        <span>Scan Input</span>
+                        <span>Dual-Model Detection</span>
+                        <span>Anomaly Heatmap</span>
+                        <span>Declaration NLP + Mismatch</span>
+                        <span>Material + Concealment</span>
+                        <span>Risk Fusion</span>
+                        <span>Explain & Action</span>
+                    </div>
+                </div>
+
+                <div class="module-grid">
+                    <article class="card module-card">
+                        <div class="module-head"><h3>M1 Visual Inspection</h3><span class="pill done">Baseline Ready</span></div>
+                        <p>Weapons, sharp tools, and contraband localization with risk-aware class mapping.</p>
+                        <ul>
+                            <li>Input: X-ray image or live frame</li>
+                            <li>Output: Bounding boxes + threat level</li>
+                            <li>Evaluator Story: Immediate forbidden-item highlighting</li>
+                        </ul>
+                    </article>
+
+                    <article class="card module-card">
+                        <div class="module-head"><h3>M2 Density Difference</h3><span class="pill progress">In Progress</span></div>
+                        <p>Organic, inorganic, and mixed material interpretation for hidden-density detection.</p>
+                        <ul>
+                            <li>Input: Dual-energy or proxy material cues</li>
+                            <li>Output: Material label + confidence</li>
+                            <li>Evaluator Story: Density mismatch as strong suspicion signal</li>
+                        </ul>
+                    </article>
+
+                    <article class="card module-card">
+                        <div class="module-head"><h3>M3 Documentation NLP</h3><span class="pill progress">In Progress</span></div>
+                        <p>Flags vague declarations and textual inconsistencies in manifests.</p>
+                        <ul>
+                            <li>Input: Manifest and declaration text</li>
+                            <li>Output: Vague or mismatch flags</li>
+                            <li>Evaluator Story: Text intelligence catches misdeclaration tactics</li>
+                        </ul>
+                    </article>
+
+                    <article class="card module-card">
+                        <div class="module-head"><h3>M4 Historical Logs</h3><span class="pill done">Baseline Ready</span></div>
+                        <p>Route and shipper history based risk adjustment for repeat violation patterns.</p>
+                        <ul>
+                            <li>Input: Route, shipper, prior violations</li>
+                            <li>Output: Historical risk boost</li>
+                            <li>Evaluator Story: Data-backed red-channel recommendation</li>
+                        </ul>
+                    </article>
+
+                    <article class="card module-card">
+                        <div class="module-head"><h3>M5 Cargo Reconciliation</h3><span class="pill done">Baseline Ready</span></div>
+                        <p>Object counting audit plus density-volume consistency check for large cargo.</p>
+                        <ul>
+                            <li>Input: Counts, weight, volume, scan detections</li>
+                            <li>Output: Theft or misdeclaration alarms</li>
+                            <li>Evaluator Story: Manifest truth-validation at scale</li>
+                        </ul>
+                    </article>
+
+                    <article class="card module-card">
+                        <div class="module-head"><h3>M6 Cash Bundles</h3><span class="pill queued">Queued</span></div>
+                        <p>Direct alerting for illegal currency transport attempts.</p>
+                        <ul>
+                            <li>Input: Security scan frames</li>
+                            <li>Output: Currency bundle detection</li>
+                            <li>Evaluator Story: High-severity auto-alert lane</li>
+                        </ul>
+                    </article>
+
+                    <article class="card module-card">
+                        <div class="module-head"><h3>M7 Luxury Goods</h3><span class="pill queued">Queued</span></div>
+                        <p>Premium goods detection for undeclared high-value shipment checks.</p>
+                        <ul>
+                            <li>Input: X-ray visual signatures</li>
+                            <li>Output: Luxury item category flags</li>
+                            <li>Evaluator Story: Duty and smuggling intelligence support</li>
+                        </ul>
+                    </article>
+
+                    <article class="card module-card">
+                        <div class="module-head"><h3>M8 News Trend Signal</h3><span class="pill queued">Queued</span></div>
+                        <p>Current smuggling trend ingestion to dynamically prioritize targeted checks.</p>
+                        <ul>
+                            <li>Input: News and intelligence feeds</li>
+                            <li>Output: Dynamic watchlist priorities</li>
+                            <li>Evaluator Story: Live adaptation to current racket patterns</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+    let currentMode = 'realtime';
+    let currentSource = 'upload';
+    let selectedFile = null;
+    let webcamStream = null;
+    let webcamInterval = null;
+    let socket = null;
+    let historyData = [];
+
+    function updateAnalyzeButtonState() {
+        const btn = document.getElementById('btnAnalyze');
+        const label = btn.querySelector('.btn-text');
+
+        if (currentSource === 'webcam') {
+            btn.disabled = true;
+            label.textContent = 'Live mode uses Start Live Feed';
+            return;
+        }
+
+        btn.disabled = false;
+        label.textContent = 'Run Screening';
+    }
+
+    function startLiveInterval() {
+        const canvas = document.getElementById('webcamCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 640;
+        canvas.height = 480;
+
+        if (webcamInterval) {
+            clearInterval(webcamInterval);
+            webcamInterval = null;
+        }
+
+        webcamInterval = setInterval(() => {
+            ctx.drawImage(document.getElementById('webcamVideo'), 0, 0, 640, 480);
+            socket.emit('analyze_frame', {
+                frame: canvas.toDataURL('image/jpeg', 0.7),
+                mode: currentMode,
+                declared_cargo: document.getElementById('declaredCargo').value,
+            });
+        }, currentMode === 'realtime' ? 220 : 520);
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.toggle-btn[data-mode]').forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        // Reapply frame cadence immediately when switching modes in live streaming.
+        if (webcamStream && socket) {
+            startLiveInterval();
+        }
+    }
+
+    function setSource(source) {
+        currentSource = source;
+        document.querySelectorAll('.input-tab').forEach((btn) => {
+            btn.classList.toggle('active', btn.dataset.source === source);
+        });
+
+        document.getElementById('uploadSection').classList.toggle('hidden', source !== 'upload');
+        document.getElementById('webcamSection').classList.toggle('hidden', source !== 'webcam');
+
+        updateAnalyzeButtonState();
+
+        if (source === 'upload' && webcamStream) {
+            stopWebcam();
+            document.getElementById('btnStartCam').textContent = 'Start Live Feed';
+        }
+    }
+
+    function setPage(pageId, btn) {
+        document.querySelectorAll('.page-view').forEach((page) => page.classList.add('hidden'));
+        document.getElementById(pageId).classList.remove('hidden');
+
+        document.querySelectorAll('.page-tab').forEach((tab) => tab.classList.remove('active'));
+        if (btn) {
+            btn.classList.add('active');
+        }
+    }
+
+    function updateWorkflow(step) {
+        const map = {
+            acquire: 'wfAcquire',
+            analyze: 'wfAnalyze',
+            reconcile: 'wfReconcile',
+            escalate: 'wfEscalate',
+        };
+
+        Object.values(map).forEach((id) => document.getElementById(id).classList.remove('active'));
+
+        if (map[step]) {
+            document.getElementById(map[step]).classList.add('active');
+        }
+    }
+
+    const uploadZone = document.getElementById('uploadZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadPreview = document.getElementById('uploadPreview');
+
+    uploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadZone.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', () => {
+        uploadZone.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            uploadPreview.src = e.target.result;
+            uploadPreview.classList.remove('hidden');
+            updateWorkflow('acquire');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function analyzeImage() {
+        if (currentSource === 'webcam') {
+            alert('Live Camera mode runs continuous analysis. Use Start Live Feed.');
+            return;
+        }
+
+        if (!selectedFile && currentSource === 'upload') {
+            alert('Please select an image first.');
+            return;
+        }
+
+        const btn = document.getElementById('btnAnalyze');
+        btn.classList.add('loading');
+        btn.disabled = true;
+
+        updateWorkflow('analyze');
+
+        try {
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            formData.append('mode', currentMode);
+            formData.append('declared_cargo', document.getElementById('declaredCargo').value);
+            formData.append('use_llm', document.getElementById('llmToggle').checked);
+
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Analysis failed');
+            }
+
+            const data = await response.json();
+            displayResults(data);
+            updateWorkflow('reconcile');
+            setTimeout(() => updateWorkflow('escalate'), 900);
+
+            setPage('pageConsole', document.querySelector('.page-tab'));
+        } catch (err) {
+            alert('Error: ' + err.message);
+            console.error(err);
+        } finally {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+    }
+
+    function displayResults(data) {
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('resultsContent').classList.remove('hidden');
+
+        const riskVal = document.getElementById('riskScoreVal');
+        riskVal.textContent = data.risk_score;
+        riskVal.className = 'metric-value risk-score-value ' + data.risk_level.toLowerCase();
+
+        const badge = document.getElementById('riskLevelBadge');
+        badge.textContent = data.risk_level;
+        badge.className = 'risk-level-badge ' + data.risk_level.toLowerCase();
+
+        document.getElementById('anomalyVal').textContent = Math.round(data.anomaly_score * 100) + '%';
+        document.getElementById('concealVal').textContent = Math.round((data.concealment_score || 0) * 100) + '%';
+        document.getElementById('detCountVal').textContent = data.detection_count;
+
+        const gaugeFill = document.getElementById('riskGaugeFill');
+        gaugeFill.style.width = data.risk_score + '%';
+        if (data.risk_score >= 80) {
+            gaugeFill.style.background = 'var(--risk-critical)';
+        } else if (data.risk_score >= 70) {
+            gaugeFill.style.background = 'var(--risk-high)';
+        } else if (data.risk_score >= 35) {
+            gaugeFill.style.background = 'var(--risk-medium)';
+        } else {
+            gaugeFill.style.background = 'var(--risk-low)';
+        }
+
+        const breakdown = data.risk_breakdown;
+        setBreakdown('bdDet', 'bdDetVal', breakdown.detection_component, 35, 'var(--accent-ice)');
+        setBreakdown('bdAnom', 'bdAnomVal', breakdown.anomaly_component, 20, 'var(--accent-cyan)');
+        setBreakdown('bdMis', 'bdMisVal', breakdown.mismatch_component, 15, 'var(--accent-amber)');
+        setBreakdown('bdMat', 'bdMatVal', breakdown.material_component || 0, 10, 'var(--accent-rose)');
+        setBreakdown('bdCon', 'bdConVal', breakdown.concealment_component || 0, 10, 'var(--accent-violet)');
+        setBreakdown('bdVLM', 'bdVLMVal', breakdown.vlm_component || 0, 10, 'var(--accent-mint)');
+
+        if (uploadPreview.src) {
+            setImage('panelOriginal', uploadPreview.src, 'Original Scan');
+        }
+        setImage('panelDetections', 'data:image/jpeg;base64,' + data.annotated_image, 'Detections + Material');
+        setImage('panelHeatmap', 'data:image/jpeg;base64,' + data.heatmap_overlay, 'Anomaly Heatmap');
+
+        const listEl = document.getElementById('detectionList');
+        if (!data.detections.length) {
+            listEl.innerHTML = '<p class="muted-line">No prohibited items detected.</p>';
+        } else {
+            listEl.innerHTML = data.detections.map((d, i) => {
+                return `<div class="detection-item" style="animation-delay:${i * 0.05}s">
+                    <span class="det-threat t${d.threat_level}"></span>
+                    <span class="det-class">${d.class}</span>
+                    <span class="det-conf">${Math.round(d.confidence * 100)}%</span>
+                    <div class="det-conf-bar"><div class="det-conf-fill" style="width:${d.confidence * 100}%;background:${getConfColor(d.confidence)}"></div></div>
+                </div>`;
+            }).join('');
+        }
+
+        document.getElementById('explanationText').textContent = data.explanation;
+        const srcEl = document.getElementById('explanationSource');
+        srcEl.innerHTML = '';
+
+        const vlmText = document.getElementById('vlmText');
+        const vlmSource = document.getElementById('vlmSource');
+        if (data.vlm_analysis && data.vlm_source !== 'disabled') {
+            vlmText.textContent = data.vlm_analysis;
+            vlmSource.textContent = `${data.vlm_latency_ms}ms`;
+        } else {
+            vlmText.textContent = 'Enable Explain Image Mode to activate rule-based image reasoning.';
+            vlmSource.innerHTML = '';
+        }
+
+        const concealmentInfo = data.concealment_info || {};
+        document.getElementById('concealmentDetails').innerHTML = `
+            <div class="detail-line">${concealmentInfo.message || 'No data'}</div>
+            <div class="breakdown-row"><span class="breakdown-label">Overlap</span>
+                <div class="breakdown-bar"><div class="breakdown-fill" style="background:var(--accent-rose);width:${(concealmentInfo.overlap_score || 0) * 100}%"></div></div>
+                <span class="breakdown-value">${((concealmentInfo.overlap_score || 0) * 100).toFixed(0)}%</span></div>
+            <div class="breakdown-row"><span class="breakdown-label">Edge Break</span>
+                <div class="breakdown-bar"><div class="breakdown-fill" style="background:var(--accent-amber);width:${(concealmentInfo.edge_score || 0) * 100}%"></div></div>
+                <span class="breakdown-value">${((concealmentInfo.edge_score || 0) * 100).toFixed(0)}%</span></div>
+            <div class="breakdown-row"><span class="breakdown-label">Density Anom.</span>
+                <div class="breakdown-bar"><div class="breakdown-fill" style="background:var(--accent-violet);width:${(concealmentInfo.density_score || 0) * 100}%"></div></div>
+                <span class="breakdown-value">${((concealmentInfo.density_score || 0) * 100).toFixed(0)}%</span></div>`;
+
+        const materialInfo = data.material_info || {};
+        document.getElementById('materialDetails').innerHTML = `
+            <p>${materialInfo.message || 'No material data'}</p>
+            ${materialInfo.metallic_count > 0 ? `<p class="detail-line">Avg metallic score: <strong>${((materialInfo.avg_metallic_score || 0) * 100).toFixed(0)}%</strong></p>` : ''}
+            ${materialInfo.organic_declared ? '<p class="warn-note">Potential concealment signal: metallic objects in organic-declared cargo.</p>' : ''}`;
+
+        const docNlp = data.declaration_nlp || {};
+        const docFlags = Array.isArray(docNlp.flags) && docNlp.flags.length
+            ? docNlp.flags.map((f) => `<li>${f}</li>`).join('')
+            : '<li>No declaration quality flags</li>';
+
+        document.getElementById('docNlpDetails').innerHTML = `
+            <p>${docNlp.message || 'Declaration NLP not available'}</p>
+            <p class="detail-line">Quality: <strong>${docNlp.quality || 'UNKNOWN'}</strong> | Penalty: <strong>${docNlp.penalty ?? 0}</strong></p>
+            <ul style="margin:6px 0 0 16px;color:var(--text-1);font-size:0.76rem;display:grid;gap:3px;">${docFlags}</ul>`;
+
+        document.getElementById('perfCard').style.display = 'block';
+        document.getElementById('perfInference').textContent = data.inference_time_ms + 'ms';
+        document.getElementById('perfTotal').textContent = data.total_time_ms + 'ms';
+        document.getElementById('perfFPS').textContent = data.fps;
+        document.getElementById('perfLLM').textContent = data.llm_latency_ms ? data.llm_latency_ms + 'ms' : '-';
+        document.getElementById('perfVLM').textContent = data.vlm_latency_ms ? data.vlm_latency_ms + 'ms' : '-';
+
+        updateScanHistory(data);
+    }
+
+    function setBreakdown(fillId, valId, value, max, color) {
+        const pct = Math.min(100, (value / max) * 100);
+        const fill = document.getElementById(fillId);
+        fill.style.width = pct + '%';
+        fill.style.background = color;
+        document.getElementById(valId).textContent = value.toFixed(1);
+    }
+
+    function setImage(panelId, src, label) {
+        const panel = document.getElementById(panelId);
+        panel.innerHTML = `<span class="panel-label">${label}</span><img src="${src}" alt="${label}">`;
+    }
+
+    function getConfColor(conf) {
+        if (conf >= 0.7) return 'var(--risk-critical)';
+        if (conf >= 0.5) return 'var(--risk-high)';
+        if (conf >= 0.3) return 'var(--risk-medium)';
+        return 'var(--risk-low)';
+    }
+
+    function updateScanHistory(data) {
+        historyData.unshift({
+            time: new Date().toLocaleTimeString(),
+            score: data.risk_score,
+            level: data.risk_level,
+            detections: data.detection_count,
+        });
+
+        if (historyData.length > 20) {
+            historyData.pop();
+        }
+
+        const el = document.getElementById('scanHistory');
+        el.innerHTML = historyData.map((h) => {
+            const color = h.level === 'CRITICAL'
+                ? 'var(--risk-critical)'
+                : h.level === 'HIGH'
+                    ? 'var(--risk-high)'
+                    : h.level === 'MEDIUM'
+                        ? 'var(--risk-medium)'
+                        : 'var(--risk-low)';
+
+            return `<div class="history-chip" style="border-color:${color}55;">
+                <div class="history-score" style="color:${color};">${h.score}</div>
+                <div class="history-time">${h.time}</div>
+                <div class="history-meta">${h.detections} det</div>
+            </div>`;
+        }).join('');
+    }
+
+    async function toggleWebcam() {
+        const btn = document.getElementById('btnStartCam');
+        if (webcamStream) {
+            stopWebcam();
+            btn.textContent = 'Start Live Feed';
+            updateWorkflow('acquire');
+        } else {
+            const started = await startWebcam();
+            if (started) {
+                btn.textContent = 'Stop Live Feed';
+                updateWorkflow('analyze');
+            } else {
+                btn.textContent = 'Start Live Feed';
+                updateWorkflow('acquire');
+            }
+        }
+    }
+
+    async function startWebcam() {
+        try {
+            webcamStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480 },
+            });
+            document.getElementById('webcamVideo').srcObject = webcamStream;
+
+            if (!socket) {
+                socket = io();
+                socket.on('frame_result', handleLiveResult);
+            }
+
+            startLiveInterval();
+            return true;
+        } catch (err) {
+            alert('Webcam error: ' + err.message);
+            console.error(err);
+            return false;
+        }
+    }
+
+    function stopWebcam() {
+        if (webcamInterval) {
+            clearInterval(webcamInterval);
+            webcamInterval = null;
+        }
+        if (webcamStream) {
+            webcamStream.getTracks().forEach((track) => track.stop());
+            webcamStream = null;
+        }
+    }
+
+    function handleLiveResult(data) {
+        if (data.error) return;
+
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('resultsContent').classList.remove('hidden');
+
+        const riskVal = document.getElementById('riskScoreVal');
+        riskVal.textContent = data.risk_score;
+        riskVal.className = 'metric-value risk-score-value ' + data.risk_level.toLowerCase();
+
+        const badge = document.getElementById('riskLevelBadge');
+        badge.textContent = data.risk_level;
+        badge.className = 'risk-level-badge ' + data.risk_level.toLowerCase();
+
+        document.getElementById('anomalyVal').textContent = Math.round(data.anomaly_score * 100) + '%';
+        document.getElementById('concealVal').textContent = Math.round((data.concealment_score || 0) * 100) + '%';
+        document.getElementById('detCountVal').textContent = data.detection_count;
+
+        const gaugeFill = document.getElementById('riskGaugeFill');
+        gaugeFill.style.width = data.risk_score + '%';
+
+        setImage('panelDetections', 'data:image/jpeg;base64,' + data.annotated_image, 'Live Detections');
+        setImage('panelHeatmap', 'data:image/jpeg;base64,' + data.heatmap_overlay, 'Live Heatmap');
+
+        document.getElementById('perfCard').style.display = 'block';
+        document.getElementById('perfFPS').textContent = data.fps;
+        document.getElementById('perfInference').textContent = data.inference_time_ms + 'ms';
+        document.getElementById('explanationText').textContent = data.explanation;
+
+        updateWorkflow('escalate');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetch('/api/status')
+            .then((r) => r.json())
+            .then(() => {
+                document.getElementById('statusText').textContent = 'System Ready';
+            })
+            .catch(() => {
+                document.getElementById('statusText').textContent = 'Server unavailable';
+            });
+
+        updateAnalyzeButtonState();
+    });
+    </script>
+</body>
+</html>

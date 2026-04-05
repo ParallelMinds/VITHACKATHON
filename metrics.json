@@ -1,0 +1,14 @@
+{
+  "mAP_50": 0.995,
+  "mAP_50_95": 0.8623333333333332,
+  "precision": 0.9669135583468657,
+  "recall": 1.0,
+  "f1": 0.9831779974820344,
+  "fnr": 0.0,
+  "fpr": 0.033086441653134346,
+  "avg_inference_ms": 80.5,
+  "total_scans": 9,
+  "threats_detected": 7,
+  "narcotics_flagged": 10,
+  "model_name": "YOLOv8n-Xray"
+}
