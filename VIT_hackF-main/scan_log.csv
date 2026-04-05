@@ -1,0 +1,19 @@
+Timestamp,Detections,Risk Score,Decision,Item Count
+2026-03-27 11:14:42,"Gun, Bullet, Wrench, Wrench, Pliers",91,CRITICAL — DETAIN CARGO IMMEDIATELY,5
+2026-03-27 11:16:12,"Gun, Bullet",93,CRITICAL — DETAIN CARGO IMMEDIATELY,2
+2026-03-27 11:16:46,"Knife, Knife, Scissors, Scissors, Powerbank, Lighter",64,HIGH    — FLAG FOR INSPECTION,6
+2026-03-27 11:17:21,"Knife, Scissors, Scissors",60,HIGH    — FLAG FOR INSPECTION,3
+2026-03-27 11:17:46,None,65,HIGH    — FLAG FOR INSPECTION,0
+2026-03-27 11:18:07,"Sprayer, Powerbank, Lighter, Powerbank",23,LOW     — CLEARED (Log Only),4
+2026-03-27 11:18:35,"Hammer, Pliers, Wrench, Powerbank",22,LOW     — CLEARED (Log Only),4
+2026-03-27 11:19:14,None,0,LOW     — CLEARED (Log Only),0
+2026-03-27 11:19:36,"Sprayer, Sprayer",23,LOW     — CLEARED (Log Only),2
+2026-03-27 11:19:55,"Wrench, Wrench",26,LOW     — CLEARED (Log Only),2
+2026-03-27 11:20:13,"Knife, Hammer, Pliers, Scissors, Scissors",60,HIGH    — FLAG FOR INSPECTION,5
+2026-04-05 12:25:21,"Knife, Sprayer, Sprayer, Powerbank, Sprayer",66,HIGH    — FLAG FOR INSPECTION,5
+2026-04-05 12:32:54,"Knife, Sprayer, Sprayer, Powerbank, Sprayer",66,HIGH    — FLAG FOR INSPECTION,5
+2026-04-05 12:39:29,Wrench,29,LOW     — CLEARED (Log Only),1
+2026-04-05 12:43:18,"Knife, Sprayer, Sprayer, Powerbank, Sprayer",66,HIGH    — FLAG FOR INSPECTION,5
+2026-04-05 12:43:35,"Knife, Sprayer, Sprayer, Powerbank, Sprayer",66,HIGH    — FLAG FOR INSPECTION,5
+2026-04-05 12:44:50,"Knife, Sprayer, Sprayer, Powerbank, Sprayer",66,HIGH    — FLAG FOR INSPECTION,5
+2026-04-05 12:46:58,"Knife, Sprayer, Sprayer, Powerbank, Sprayer",66,HIGH    — FLAG FOR INSPECTION,5

@@ -1,0 +1,46 @@
+# Python cache/build
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Env files
+.env
+.env.*
+*.local
+
+# IDE/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Large dataset and generated labels (do not push)
+images/
+labels/
+annotation/
+
+# Training outputs
+runs/
+wandb/
+*.cache
+
+images/
+annotation/
+labels/
+critical_items_dataset/

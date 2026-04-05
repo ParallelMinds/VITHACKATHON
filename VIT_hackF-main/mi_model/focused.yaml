@@ -1,0 +1,21 @@
+# Focused dataset YAML for training on Gun + Knife critical items
+# Points to extracted critical_items_dataset (output from extract.py)
+
+path: critical_items_dataset
+train: images/train
+val: ../images/test   # Use main dataset val for honest metrics (optional)
+
+nc: 12
+names:
+  - Baton
+  - Pliers
+  - Hammer
+  - Powerbank
+  - Scissors
+  - Wrench
+  - Gun        # class 6 — CRITICAL
+  - Bullet     # class 7 — CRITICAL
+  - Sprayer
+  - HandCuffs
+  - Knife      # class 10 — CRITICAL
+  - Lighter

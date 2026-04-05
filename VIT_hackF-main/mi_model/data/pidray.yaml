@@ -1,0 +1,18 @@
+path: C:/Users/44184/Desktop/project/Customs_and_Border_Security_model/Ai_model
+train: images/train
+val: images/test
+
+nc: 12
+names:
+  - Baton
+  - Pliers
+  - Hammer
+  - Powerbank
+  - Scissors
+  - Wrench
+  - Gun
+  - Bullet
+  - Sprayer
+  - HandCuffs
+  - Knife
+  - Lighter

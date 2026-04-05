@@ -1,0 +1,11 @@
+fastapi==0.112.2
+uvicorn==0.39.0
+python-multipart==0.0.20
+pillow==10.4.0
+numpy==1.26.4
+opencv-python==4.8.1.78
+ultralytics==8.4.27
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+gradio==3.50.2

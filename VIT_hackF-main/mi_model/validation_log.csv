@@ -1,0 +1,13 @@
+Timestamp,Image,TP,FP,FN,Precision,Recall,F1
+2026-04-05 13:46:36,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmp7tn472ee.txt,1,0,0,1.000,1.000,1.000
+2026-04-05 13:47:48,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmpuu2upzrb.txt,1,0,0,1.000,1.000,1.000
+2026-04-05 13:48:55,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmppbqmnj9p.txt,0,0,1,0.000,0.000,0.000
+2026-04-05 13:49:10,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmpirm6efol.txt,1,1,0,0.500,1.000,0.667
+2026-04-05 13:49:17,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmpayxhwbpm.txt,0,0,1,0.000,0.000,0.000
+2026-04-05 13:52:36,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmpyzzs5uwg.txt,1,1,0,0.500,1.000,0.667
+2026-04-05 13:53:10,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmpcthz21qc.txt,0,0,1,0.000,0.000,0.000
+2026-04-05 13:53:17,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmpuu_2xw0o.txt,1,0,0,1.000,1.000,1.000
+2026-04-05 13:53:24,/var/folders/cg/n0qg575d5pggt67vd232ksjw0000gn/T/tmpmbz6jjba.txt,0,0,1,0.000,0.000,0.000
+2026-04-05 14:50:15,C:\Users\44184\AppData\Local\Temp\tmp8fb66jj7.txt,1,3,0,0.250,1.000,0.400
+2026-04-05 14:50:29,C:\Users\44184\AppData\Local\Temp\tmpk767us8m.txt,0,0,1,0.000,0.000,0.000
+2026-04-05 15:29:48,C:\Users\44184\AppData\Local\Temp\tmptm40pwya.txt,3,0,0,1.000,1.000,1.000
