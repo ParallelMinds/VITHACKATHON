@@ -1,0 +1,140 @@
+# CIIBS - Real-Time Intelligent Cargo X-ray Risk Screening
+# Configuration File
+
+app:
+  title: "CIIBS — Cargo X-ray Intelligence"
+  host: "0.0.0.0"
+  port: 5000
+  debug: false
+
+detection:
+  # PIDray 12 prohibited item categories
+  classes:
+    - "Baton"
+    - "Pliers"
+    - "Hammer"
+    - "Powerbank"
+    - "Scissors"
+    - "Wrench"
+    - "Gun"
+    - "Bullet"
+    - "Sprayer"
+    - "HandCuffs"
+    - "Knife"
+    - "Lighter"
+
+  # COCO class IDs that map to prohibited items for demo
+  coco_mapping:
+    43: "Knife"        # knife
+    76: "Scissors"     # scissors
+    77: "Pliers"       # toothbrush → Pliers (shape proxy)
+    42: "Gun"          # fork → Gun (shape proxy in X-ray)
+    73: "Hammer"       # book → Hammer (dense object)
+    74: "Wrench"       # clock → Wrench (metallic)
+    39: "Baton"        # baseball bat → Baton
+    75: "Lighter"      # vase → Lighter
+    46: "Bullet"       # banana → Bullet (shape)
+    64: "Powerbank"    # mouse → Powerbank
+    84: "Sprayer"      # hair drier → Sprayer
+    80: "HandCuffs"    # toaster → HandCuffs
+
+  modes:
+    accuracy:
+      model: "../trained-models/yolov8m.pt"
+      imgsz: 640
+      conf_threshold: 0.25
+      iou_threshold: 0.45
+      max_det: 50
+    realtime:
+      model: "../trained-models/yolov8n.pt"
+      imgsz: 416
+      conf_threshold: 0.35
+      iou_threshold: 0.50
+      max_det: 20
+
+anomaly:
+  gaussian_ksize: 21
+  canny_low: 50
+  canny_high: 150
+  frequency_weight: 0.4
+  edge_weight: 0.3
+  density_weight: 0.3
+  blur_sigma: 15
+
+# Material density classification thresholds (X-ray color channel analysis)
+material:
+  metallic_blue_ratio: 0.4    # blue channel dominance threshold
+  organic_warm_ratio: 0.45    # warm (red+green) channel dominance
+  density_categories:
+    - name: "Metallic/Dense"
+      color: "#3b82f6"
+      min_ratio: 0.4
+    - name: "Intermediate"
+      color: "#f59e0b"
+      min_ratio: 0.25
+    - name: "Organic/Light"
+      color: "#10b981"
+      min_ratio: 0.0
+
+# Concealment pattern detection
+concealment:
+  overlap_iou_threshold: 0.15   # IoU above this = potential concealment
+  edge_break_threshold: 0.3     # edge discontinuity ratio
+  density_gradient_threshold: 0.4
+
+risk:
+  weights:
+    detection: 0.60     # primary signal — dominates when objects found
+    anomaly: 0.10       # secondary — structural anomalies
+    mismatch: 0.15      # declaration vs detected items
+    material: 0.05      # metallic in non-metallic cargo
+    concealment: 0.05   # hidden item patterns
+    vlm_agreement: 0.05 # cross-validation
+  levels:
+    low: 30
+    medium: 60
+    high: 80
+  clamp_min: 0
+  clamp_max: 100
+
+# Narcotics / Substance Detection (NOVEL)
+narcotics:
+  enabled: true
+  min_organic_area_pct: 0.5   # minimum % of image for organic blob
+  homogeneity_threshold: 0.6  # std/mean ratio below this = suspicious
+  rectangularity_threshold: 0.5
+  min_suspicion: 0.35
+
+declaration:
+  conflict_map:
+    "electronics":  ["Gun", "Bullet", "Knife"]
+    "clothing":     ["Gun", "Bullet", "Knife", "Scissors", "Hammer"]
+    "food":         ["Gun", "Bullet", "Knife", "Wrench", "Pliers"]
+    "documents":    ["Gun", "Bullet", "Knife", "Hammer", "Powerbank"]
+    "medical":      ["Gun", "Bullet"]
+    "tools":        []
+    "machinery":    ["Gun", "Bullet"]
+    "fragile":      ["Gun", "Bullet", "Knife", "Hammer", "Baton"]
+    "personal":     []
+    "empty":        ["Gun", "Bullet", "Knife", "Scissors", "Hammer", "Wrench", "Pliers", "Baton", "Lighter", "Sprayer", "HandCuffs", "Powerbank"]
+
+llm:
+  enabled: true
+  provider: "local-rule-engine"
+  model: "rules-v1"
+  timeout: 30
+  max_tokens: 150
+  temperature: 0.0
+  system_prompt: |
+    You are CIIBS AI Copilot for X-ray cargo screening.
+    Respond in MAX 3-4 sentences total. Be extremely brief.
+    Cover: risk verdict, key concern, and recommended action.
+    No headers, no bullet points, no numbering. Just a short paragraph.
+
+  # Local vision rule engine config
+  vision:
+    enabled: true
+    model: "vision-rules-v1"
+    prompt: |
+      Generate a concise rule-based image insight in MAX 3 sentences.
+      Mention structural complexity, density profile, and caution level.

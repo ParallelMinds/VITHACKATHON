@@ -1,0 +1,27 @@
+# Python caches
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+env/
+.env
+
+# Model weights (too large for git)
+*.pt
+datasets/
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store
+
+# Local Python environments
+.venv/
+.venv*/
+
+# Generated runtime artifacts
+outputs/*.jpg
+outputs/*.jpeg
+outputs/*.png
+outputs/last_api_response.json

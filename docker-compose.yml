@@ -1,0 +1,20 @@
+# Project Aegis — Docker Compose
+version: "3.9"
+
+services:
+  aegis:
+    build: .
+    container_name: project-aegis
+    ports:
+      - "5000:5000"
+    environment:
+      - ROBOFLOW_API_KEY=LCa8SMlLGoq2OvrTECZe
+      - NEWS_API_KEY=75188e18224148dab91c2ae2d0e952da
+    volumes:
+      - ./outputs:/app/outputs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/status')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
