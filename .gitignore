@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+*.egg
+venv/
+env/
+.venv/
+.pytest_cache/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.env
+
+# ML/Data
+.dvc/
+runs/
+
+# Logs & Output
+*.log
+results/
+reports/
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+
+# Models (already included)
+*.pt
+
+/.env
+
+Model_Backend/audit_logs/
+Model_Backend/outputs/
+
+# Sensitive credentials & secrets
+JWT_PINNATA.txt
+*.key
+*.pem
+*.crt
+
+# Test data & binaries
+*.pdf
+Model_Backend/test_images/
+PIDray-main/tests/test_data/
+
+# Temporary/backup files
+*.tmp
+*.bak
+*.orig
+~*
