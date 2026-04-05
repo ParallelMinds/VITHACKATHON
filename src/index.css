@@ -1,0 +1,71 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Manrope", system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk", "Manrope", system-ui, -apple-system, sans-serif;
+  --color-navy-50: #f0f3f8;
+  --color-navy-100: #dce3ef;
+  --color-navy-200: #b9c7df;
+  --color-navy-300: #8da3c8;
+  --color-navy-400: #6580b0;
+  --color-navy-500: #4a6491;
+  --color-navy-600: #3a4f75;
+  --color-navy-700: #2d3d5b;
+  --color-navy-800: #1e2a40;
+  --color-navy-900: #111827;
+  --color-navy-950: #0a0f1a;
+
+  --color-risk-low: #16a34a;
+  --color-risk-medium: #ca8a04;
+  --color-risk-high: #dc2626;
+
+  --color-status-active: #2563eb;
+  --color-status-completed: #16a34a;
+  --color-status-flagged: #dc2626;
+  --color-status-mismatch: #ea580c;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: #09090b;
+    color: #f4f4f5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--color-navy-200);
+    border-radius: 20px;
+  }
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-navy-200) transparent;
+  }
+  
+  .bg-dot-pattern {
+    background-image: radial-gradient(rgba(148, 163, 184, 0.06) 1.5px, transparent 1.5px);
+    background-size: 24px 24px;
+  }
+}

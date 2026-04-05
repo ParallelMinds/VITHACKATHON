@@ -1,0 +1,138 @@
+# ------------------------------
+# Python bytecode and caches
+# ------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ------------------------------
+# Build and packaging artifacts
+# ------------------------------
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# ------------------------------
+# Virtual environments
+# ------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# ------------------------------
+# Test, coverage, and type-check outputs
+# ------------------------------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# ------------------------------
+# Jupyter / notebook checkpoints
+# ------------------------------
+.ipynb_checkpoints/
+
+# ------------------------------
+# Streamlit artifacts
+# ------------------------------
+.streamlit/secrets.toml
+
+# ------------------------------
+# Logs and runtime files
+# ------------------------------
+*.log
+logs/
+*.pid
+*.seed
+*.out
+*.err
+
+# ------------------------------
+# IDE and editor settings
+# ------------------------------
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+
+# ------------------------------
+# OS-specific files
+# ------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ------------------------------
+# Environment and local config
+# ------------------------------
+.env
+.env.*
+!.env.example
+
+# ------------------------------
+# ML model weights and large binary artifacts
+# ------------------------------
+*.ckpt
+*.onnx
+*.engine
+*.tflite
+*.h5
+*.pb
+
+# ------------------------------
+# Data and generated outputs
+# ------------------------------
+data/
+datasets/
+artifacts/
+outputs/
+reports/
+tmp/
+temp/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.vite

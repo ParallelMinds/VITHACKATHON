@@ -1,0 +1,15 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Deep Cargo logo">
+  <rect width="256" height="256" fill="#09090b"/>
+
+  <path d="M36 78 C36 52 58 30 84 30 L126 30 C158 30 186 48 198 76 C205 92 205 106 198 120 C186 148 158 166 126 166 L108 166"
+        fill="none" stroke="#9b0000" stroke-width="22" stroke-linecap="round"/>
+
+  <path d="M220 94 L164 94 C128 94 98 124 98 160 C98 190 120 215 150 220"
+        fill="none" stroke="#001f4d" stroke-width="22" stroke-linecap="round"/>
+
+  <path d="M28 184 L94 184 C132 184 163 153 163 115"
+        fill="none" stroke="#9b0000" stroke-width="22" stroke-linecap="round"/>
+
+  <path d="M78 148 C84 188 116 220 156 220 L228 220"
+        fill="none" stroke="#001f4d" stroke-width="22" stroke-linecap="round"/>
+</svg>
