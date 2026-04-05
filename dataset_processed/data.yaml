@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 12
+names: ['Baton', 'Bullet', 'Gun', 'Hammer', 'HandCuffs', 'Knife', 'Lighter', 'Pliers', 'Powerbank', 'Scissors', 'Sprayer', 'Wrench']
+
+roboflow:
+  workspace: humairabano
+  project: yolov9-pidray
+  version: 3
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/humairabano/yolov9-pidray/dataset/3
